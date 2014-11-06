@@ -1,0 +1,283 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
+<head>
+<meta http-equiv="content-type" content="text/html; charset=UTF-8" />
+<title>IllegalTypeCheck xref</title>
+<link type="text/css" rel="stylesheet" href="../../../../../../stylesheet.css" />
+</head>
+<body>
+<div id="overview"><a href="../../../../../../../apidocs/com/puppycrawl/tools/checkstyle/checks/coding/IllegalTypeCheck.html">View Javadoc</a></div><pre>
+
+<a class="jxr_linenumber" name="1" href="#1">1</a>   <em class="jxr_comment">////////////////////////////////////////////////////////////////////////////////</em>
+<a class="jxr_linenumber" name="2" href="#2">2</a>   <em class="jxr_comment">// checkstyle: Checks Java source code for adherence to a set of rules.</em>
+<a class="jxr_linenumber" name="3" href="#3">3</a>   <em class="jxr_comment">// Copyright (C) 2001-2014  Oliver Burn</em>
+<a class="jxr_linenumber" name="4" href="#4">4</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="5" href="#5">5</a>   <em class="jxr_comment">// This library is free software; you can redistribute it and/or</em>
+<a class="jxr_linenumber" name="6" href="#6">6</a>   <em class="jxr_comment">// modify it under the terms of the GNU Lesser General Public</em>
+<a class="jxr_linenumber" name="7" href="#7">7</a>   <em class="jxr_comment">// License as published by the Free Software Foundation; either</em>
+<a class="jxr_linenumber" name="8" href="#8">8</a>   <em class="jxr_comment">// version 2.1 of the License, or (at your option) any later version.</em>
+<a class="jxr_linenumber" name="9" href="#9">9</a>   <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="10" href="#10">10</a>  <em class="jxr_comment">// This library is distributed in the hope that it will be useful,</em>
+<a class="jxr_linenumber" name="11" href="#11">11</a>  <em class="jxr_comment">// but WITHOUT ANY WARRANTY; without even the implied warranty of</em>
+<a class="jxr_linenumber" name="12" href="#12">12</a>  <em class="jxr_comment">// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU</em>
+<a class="jxr_linenumber" name="13" href="#13">13</a>  <em class="jxr_comment">// Lesser General Public License for more details.</em>
+<a class="jxr_linenumber" name="14" href="#14">14</a>  <em class="jxr_comment">//</em>
+<a class="jxr_linenumber" name="15" href="#15">15</a>  <em class="jxr_comment">// You should have received a copy of the GNU Lesser General Public</em>
+<a class="jxr_linenumber" name="16" href="#16">16</a>  <em class="jxr_comment">// License along with this library; if not, write to the Free Software</em>
+<a class="jxr_linenumber" name="17" href="#17">17</a>  <em class="jxr_comment">// Foundation, Inc., 59 Temple Place, Suite 330, Boston, MA  02111-1307  USA</em>
+<a class="jxr_linenumber" name="18" href="#18">18</a>  <em class="jxr_comment">////////////////////////////////////////////////////////////////////////////////</em>
+<a class="jxr_linenumber" name="19" href="#19">19</a>  <strong class="jxr_keyword">package</strong> com.puppycrawl.tools.checkstyle.checks.coding;
+<a class="jxr_linenumber" name="20" href="#20">20</a>  
+<a class="jxr_linenumber" name="21" href="#21">21</a>  <strong class="jxr_keyword">import</strong> com.google.common.collect.Sets;
+<a class="jxr_linenumber" name="22" href="#22">22</a>  <strong class="jxr_keyword">import</strong> com.puppycrawl.tools.checkstyle.api.DetailAST;
+<a class="jxr_linenumber" name="23" href="#23">23</a>  <strong class="jxr_keyword">import</strong> com.puppycrawl.tools.checkstyle.api.FullIdent;
+<a class="jxr_linenumber" name="24" href="#24">24</a>  <strong class="jxr_keyword">import</strong> com.puppycrawl.tools.checkstyle.api.TokenTypes;
+<a class="jxr_linenumber" name="25" href="#25">25</a>  <strong class="jxr_keyword">import</strong> com.puppycrawl.tools.checkstyle.checks.AbstractFormatCheck;
+<a class="jxr_linenumber" name="26" href="#26">26</a>  <strong class="jxr_keyword">import</strong> com.puppycrawl.tools.checkstyle.checks.CheckUtils;
+<a class="jxr_linenumber" name="27" href="#27">27</a>  <strong class="jxr_keyword">import</strong> java.util.Set;
+<a class="jxr_linenumber" name="28" href="#28">28</a>  
+<a class="jxr_linenumber" name="29" href="#29">29</a>  <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="30" href="#30">30</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="31" href="#31">31</a>  <em class="jxr_javadoccomment"> * Checks that particular class are never used as types in variable</em>
+<a class="jxr_linenumber" name="32" href="#32">32</a>  <em class="jxr_javadoccomment"> * declarations, return values or parameters. Includes</em>
+<a class="jxr_linenumber" name="33" href="#33">33</a>  <em class="jxr_javadoccomment"> * a pattern check that by default disallows abstract classes.</em>
+<a class="jxr_linenumber" name="34" href="#34">34</a>  <em class="jxr_javadoccomment"> * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="35" href="#35">35</a>  <em class="jxr_javadoccomment"> * &lt;p&gt;</em>
+<a class="jxr_linenumber" name="36" href="#36">36</a>  <em class="jxr_javadoccomment"> * Rationale:</em>
+<a class="jxr_linenumber" name="37" href="#37">37</a>  <em class="jxr_javadoccomment"> * Helps reduce coupling on concrete classes. In addition abstract</em>
+<a class="jxr_linenumber" name="38" href="#38">38</a>  <em class="jxr_javadoccomment"> * classes should be thought of a convenience base class</em>
+<a class="jxr_linenumber" name="39" href="#39">39</a>  <em class="jxr_javadoccomment"> * implementations of interfaces and as such are not types themsleves.</em>
+<a class="jxr_linenumber" name="40" href="#40">40</a>  <em class="jxr_javadoccomment"> * &lt;/p&gt;</em>
+<a class="jxr_linenumber" name="41" href="#41">41</a>  <em class="jxr_javadoccomment"> * @author &lt;a href="<a href="mailto:simon@redhillconsulting.com.au" target="alexandria_uri">mailto:simon@redhillconsulting.com.au</a>"&gt;Simon Harris&lt;/a&gt;</em>
+<a class="jxr_linenumber" name="42" href="#42">42</a>  <em class="jxr_javadoccomment"> */</em>
+<a class="jxr_linenumber" name="43" href="#43">43</a>  <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">class</strong> <a href="../../../../../../com/puppycrawl/tools/checkstyle/checks/coding/IllegalTypeCheck.html">IllegalTypeCheck</a> <strong class="jxr_keyword">extends</strong> <a href="../../../../../../com/puppycrawl/tools/checkstyle/checks/AbstractFormatCheck.html">AbstractFormatCheck</a>
+<a class="jxr_linenumber" name="44" href="#44">44</a>  {
+<a class="jxr_linenumber" name="45" href="#45">45</a>      <em class="jxr_javadoccomment">/**</em><em class="jxr_javadoccomment"> Default value of pattern for illegal class name. */</em>
+<a class="jxr_linenumber" name="46" href="#46">46</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String DEFAULT_FORMAT = <span class="jxr_string">"^(.*[&#92;&#92;.])?Abstract.*$"</span>;
+<a class="jxr_linenumber" name="47" href="#47">47</a>      <em class="jxr_javadoccomment">/**</em><em class="jxr_javadoccomment"> Abstract classes legal by default. */</em>
+<a class="jxr_linenumber" name="48" href="#48">48</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String[] DEFAULT_LEGAL_ABSTRACT_NAMES = {};
+<a class="jxr_linenumber" name="49" href="#49">49</a>      <em class="jxr_javadoccomment">/**</em><em class="jxr_javadoccomment"> Types illegal by default. */</em>
+<a class="jxr_linenumber" name="50" href="#50">50</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String[] DEFAULT_ILLEGAL_TYPES = {
+<a class="jxr_linenumber" name="51" href="#51">51</a>          <span class="jxr_string">"GregorianCalendar"</span>,
+<a class="jxr_linenumber" name="52" href="#52">52</a>          <span class="jxr_string">"Hashtable"</span>,
+<a class="jxr_linenumber" name="53" href="#53">53</a>          <span class="jxr_string">"HashSet"</span>,
+<a class="jxr_linenumber" name="54" href="#54">54</a>          <span class="jxr_string">"HashMap"</span>,
+<a class="jxr_linenumber" name="55" href="#55">55</a>          <span class="jxr_string">"ArrayList"</span>,
+<a class="jxr_linenumber" name="56" href="#56">56</a>          <span class="jxr_string">"LinkedList"</span>,
+<a class="jxr_linenumber" name="57" href="#57">57</a>          <span class="jxr_string">"LinkedHashMap"</span>,
+<a class="jxr_linenumber" name="58" href="#58">58</a>          <span class="jxr_string">"LinkedHashSet"</span>,
+<a class="jxr_linenumber" name="59" href="#59">59</a>          <span class="jxr_string">"TreeSet"</span>,
+<a class="jxr_linenumber" name="60" href="#60">60</a>          <span class="jxr_string">"TreeMap"</span>,
+<a class="jxr_linenumber" name="61" href="#61">61</a>          <span class="jxr_string">"Vector"</span>,
+<a class="jxr_linenumber" name="62" href="#62">62</a>          <span class="jxr_string">"java.util.GregorianCalendar"</span>,
+<a class="jxr_linenumber" name="63" href="#63">63</a>          <span class="jxr_string">"java.util.Hashtable"</span>,
+<a class="jxr_linenumber" name="64" href="#64">64</a>          <span class="jxr_string">"java.util.HashSet"</span>,
+<a class="jxr_linenumber" name="65" href="#65">65</a>          <span class="jxr_string">"java.util.HashMap"</span>,
+<a class="jxr_linenumber" name="66" href="#66">66</a>          <span class="jxr_string">"java.util.ArrayList"</span>,
+<a class="jxr_linenumber" name="67" href="#67">67</a>          <span class="jxr_string">"java.util.LinkedList"</span>,
+<a class="jxr_linenumber" name="68" href="#68">68</a>          <span class="jxr_string">"java.util.LinkedHashMap"</span>,
+<a class="jxr_linenumber" name="69" href="#69">69</a>          <span class="jxr_string">"java.util.LinkedHashSet"</span>,
+<a class="jxr_linenumber" name="70" href="#70">70</a>          <span class="jxr_string">"java.util.TreeSet"</span>,
+<a class="jxr_linenumber" name="71" href="#71">71</a>          <span class="jxr_string">"java.util.TreeMap"</span>,
+<a class="jxr_linenumber" name="72" href="#72">72</a>          <span class="jxr_string">"java.util.Vector"</span>,
+<a class="jxr_linenumber" name="73" href="#73">73</a>      };
+<a class="jxr_linenumber" name="74" href="#74">74</a>  
+<a class="jxr_linenumber" name="75" href="#75">75</a>      <em class="jxr_javadoccomment">/**</em><em class="jxr_javadoccomment"> Default ignored method names. */</em>
+<a class="jxr_linenumber" name="76" href="#76">76</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">static</strong> <strong class="jxr_keyword">final</strong> String[] DEFAULT_IGNORED_METHOD_NAMES = {
+<a class="jxr_linenumber" name="77" href="#77">77</a>          <span class="jxr_string">"getInitialContext"</span>,
+<a class="jxr_linenumber" name="78" href="#78">78</a>          <span class="jxr_string">"getEnvironment"</span>,
+<a class="jxr_linenumber" name="79" href="#79">79</a>      };
+<a class="jxr_linenumber" name="80" href="#80">80</a>  
+<a class="jxr_linenumber" name="81" href="#81">81</a>      <em class="jxr_javadoccomment">/**</em><em class="jxr_javadoccomment"> illegal classes. */</em>
+<a class="jxr_linenumber" name="82" href="#82">82</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Set&lt;String&gt; mIllegalClassNames = Sets.newHashSet();
+<a class="jxr_linenumber" name="83" href="#83">83</a>      <em class="jxr_javadoccomment">/**</em><em class="jxr_javadoccomment"> legal abstract classes. */</em>
+<a class="jxr_linenumber" name="84" href="#84">84</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Set&lt;String&gt; mLegalAbstractClassNames = Sets.newHashSet();
+<a class="jxr_linenumber" name="85" href="#85">85</a>      <em class="jxr_javadoccomment">/**</em><em class="jxr_javadoccomment"> methods which should be ignored. */</em>
+<a class="jxr_linenumber" name="86" href="#86">86</a>      <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">final</strong> Set&lt;String&gt; mIgnoredMethodNames = Sets.newHashSet();
+<a class="jxr_linenumber" name="87" href="#87">87</a>  
+<a class="jxr_linenumber" name="88" href="#88">88</a>      <em class="jxr_javadoccomment">/**</em><em class="jxr_javadoccomment"> Creates new instance of the check. */</em>
+<a class="jxr_linenumber" name="89" href="#89">89</a>      <strong class="jxr_keyword">public</strong> <a href="../../../../../../com/puppycrawl/tools/checkstyle/checks/coding/IllegalTypeCheck.html">IllegalTypeCheck</a>()
+<a class="jxr_linenumber" name="90" href="#90">90</a>      {
+<a class="jxr_linenumber" name="91" href="#91">91</a>          <strong class="jxr_keyword">super</strong>(DEFAULT_FORMAT);
+<a class="jxr_linenumber" name="92" href="#92">92</a>          setIllegalClassNames(DEFAULT_ILLEGAL_TYPES);
+<a class="jxr_linenumber" name="93" href="#93">93</a>          setLegalAbstractClassNames(DEFAULT_LEGAL_ABSTRACT_NAMES);
+<a class="jxr_linenumber" name="94" href="#94">94</a>          setIgnoredMethodNames(DEFAULT_IGNORED_METHOD_NAMES);
+<a class="jxr_linenumber" name="95" href="#95">95</a>      }
+<a class="jxr_linenumber" name="96" href="#96">96</a>  
+<a class="jxr_linenumber" name="97" href="#97">97</a>      @Override
+<a class="jxr_linenumber" name="98" href="#98">98</a>      <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">int</strong>[] getDefaultTokens()
+<a class="jxr_linenumber" name="99" href="#99">99</a>      {
+<a class="jxr_linenumber" name="100" href="#100">100</a>         <strong class="jxr_keyword">return</strong> <strong class="jxr_keyword">new</strong> <strong class="jxr_keyword">int</strong>[] {
+<a class="jxr_linenumber" name="101" href="#101">101</a>             TokenTypes.VARIABLE_DEF,
+<a class="jxr_linenumber" name="102" href="#102">102</a>             TokenTypes.PARAMETER_DEF,
+<a class="jxr_linenumber" name="103" href="#103">103</a>             TokenTypes.METHOD_DEF,
+<a class="jxr_linenumber" name="104" href="#104">104</a>         };
+<a class="jxr_linenumber" name="105" href="#105">105</a>     }
+<a class="jxr_linenumber" name="106" href="#106">106</a> 
+<a class="jxr_linenumber" name="107" href="#107">107</a>     @Override
+<a class="jxr_linenumber" name="108" href="#108">108</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> visitToken(<a href="../../../../../../com/puppycrawl/tools/checkstyle/api/DetailAST.html">DetailAST</a> aAST)
+<a class="jxr_linenumber" name="109" href="#109">109</a>     {
+<a class="jxr_linenumber" name="110" href="#110">110</a>         <strong class="jxr_keyword">switch</strong> (aAST.getType()) {
+<a class="jxr_linenumber" name="111" href="#111">111</a>         <strong class="jxr_keyword">case</strong> TokenTypes.METHOD_DEF:
+<a class="jxr_linenumber" name="112" href="#112">112</a>             visitMethodDef(aAST);
+<a class="jxr_linenumber" name="113" href="#113">113</a>             <strong class="jxr_keyword">break</strong>;
+<a class="jxr_linenumber" name="114" href="#114">114</a>         <strong class="jxr_keyword">case</strong> TokenTypes.VARIABLE_DEF:
+<a class="jxr_linenumber" name="115" href="#115">115</a>             visitVariableDef(aAST);
+<a class="jxr_linenumber" name="116" href="#116">116</a>             <strong class="jxr_keyword">break</strong>;
+<a class="jxr_linenumber" name="117" href="#117">117</a>         <strong class="jxr_keyword">case</strong> TokenTypes.PARAMETER_DEF:
+<a class="jxr_linenumber" name="118" href="#118">118</a>             visitParameterDef(aAST);
+<a class="jxr_linenumber" name="119" href="#119">119</a>             <strong class="jxr_keyword">break</strong>;
+<a class="jxr_linenumber" name="120" href="#120">120</a>         <strong class="jxr_keyword">default</strong>:
+<a class="jxr_linenumber" name="121" href="#121">121</a>             <strong class="jxr_keyword">throw</strong> <strong class="jxr_keyword">new</strong> IllegalStateException(aAST.toString());
+<a class="jxr_linenumber" name="122" href="#122">122</a>         }
+<a class="jxr_linenumber" name="123" href="#123">123</a>     }
+<a class="jxr_linenumber" name="124" href="#124">124</a> 
+<a class="jxr_linenumber" name="125" href="#125">125</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="126" href="#126">126</a> <em class="jxr_javadoccomment">     * Checks return type of a given method.</em>
+<a class="jxr_linenumber" name="127" href="#127">127</a> <em class="jxr_javadoccomment">     * @param aAST method for check.</em>
+<a class="jxr_linenumber" name="128" href="#128">128</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="129" href="#129">129</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> visitMethodDef(<a href="../../../../../../com/puppycrawl/tools/checkstyle/api/DetailAST.html">DetailAST</a> aAST)
+<a class="jxr_linenumber" name="130" href="#130">130</a>     {
+<a class="jxr_linenumber" name="131" href="#131">131</a>         <strong class="jxr_keyword">if</strong> (isCheckedMethod(aAST)) {
+<a class="jxr_linenumber" name="132" href="#132">132</a>             checkClassName(aAST);
+<a class="jxr_linenumber" name="133" href="#133">133</a>         }
+<a class="jxr_linenumber" name="134" href="#134">134</a>     }
+<a class="jxr_linenumber" name="135" href="#135">135</a> 
+<a class="jxr_linenumber" name="136" href="#136">136</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="137" href="#137">137</a> <em class="jxr_javadoccomment">     * Checks type of parameters.</em>
+<a class="jxr_linenumber" name="138" href="#138">138</a> <em class="jxr_javadoccomment">     * @param aAST parameter list for check.</em>
+<a class="jxr_linenumber" name="139" href="#139">139</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="140" href="#140">140</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> visitParameterDef(<a href="../../../../../../com/puppycrawl/tools/checkstyle/api/DetailAST.html">DetailAST</a> aAST)
+<a class="jxr_linenumber" name="141" href="#141">141</a>     {
+<a class="jxr_linenumber" name="142" href="#142">142</a>         <strong class="jxr_keyword">final</strong> <a href="../../../../../../com/puppycrawl/tools/checkstyle/api/DetailAST.html">DetailAST</a> grandParentAST = aAST.getParent().getParent();
+<a class="jxr_linenumber" name="143" href="#143">143</a> 
+<a class="jxr_linenumber" name="144" href="#144">144</a>         <strong class="jxr_keyword">if</strong> ((grandParentAST.getType() == TokenTypes.METHOD_DEF)
+<a class="jxr_linenumber" name="145" href="#145">145</a>             &amp;&amp; isCheckedMethod(grandParentAST))
+<a class="jxr_linenumber" name="146" href="#146">146</a>         {
+<a class="jxr_linenumber" name="147" href="#147">147</a>             checkClassName(aAST);
+<a class="jxr_linenumber" name="148" href="#148">148</a>         }
+<a class="jxr_linenumber" name="149" href="#149">149</a>     }
+<a class="jxr_linenumber" name="150" href="#150">150</a> 
+<a class="jxr_linenumber" name="151" href="#151">151</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="152" href="#152">152</a> <em class="jxr_javadoccomment">     * Checks type of given variable.</em>
+<a class="jxr_linenumber" name="153" href="#153">153</a> <em class="jxr_javadoccomment">     * @param aAST variable to check.</em>
+<a class="jxr_linenumber" name="154" href="#154">154</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="155" href="#155">155</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> visitVariableDef(<a href="../../../../../../com/puppycrawl/tools/checkstyle/api/DetailAST.html">DetailAST</a> aAST)
+<a class="jxr_linenumber" name="156" href="#156">156</a>     {
+<a class="jxr_linenumber" name="157" href="#157">157</a>         checkClassName(aAST);
+<a class="jxr_linenumber" name="158" href="#158">158</a>     }
+<a class="jxr_linenumber" name="159" href="#159">159</a> 
+<a class="jxr_linenumber" name="160" href="#160">160</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="161" href="#161">161</a> <em class="jxr_javadoccomment">     * Checks type of given method, parameter or variable.</em>
+<a class="jxr_linenumber" name="162" href="#162">162</a> <em class="jxr_javadoccomment">     * @param aAST node to check.</em>
+<a class="jxr_linenumber" name="163" href="#163">163</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="164" href="#164">164</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">void</strong> checkClassName(<a href="../../../../../../com/puppycrawl/tools/checkstyle/api/DetailAST.html">DetailAST</a> aAST)
+<a class="jxr_linenumber" name="165" href="#165">165</a>     {
+<a class="jxr_linenumber" name="166" href="#166">166</a>         <strong class="jxr_keyword">final</strong> <a href="../../../../../../com/puppycrawl/tools/checkstyle/api/DetailAST.html">DetailAST</a> type = aAST.findFirstToken(TokenTypes.TYPE);
+<a class="jxr_linenumber" name="167" href="#167">167</a>         <strong class="jxr_keyword">final</strong> <a href="../../../../../../com/puppycrawl/tools/checkstyle/api/FullIdent.html">FullIdent</a> ident = CheckUtils.createFullType(type);
+<a class="jxr_linenumber" name="168" href="#168">168</a> 
+<a class="jxr_linenumber" name="169" href="#169">169</a>         <strong class="jxr_keyword">if</strong> (isMatchingClassName(ident.getText())) {
+<a class="jxr_linenumber" name="170" href="#170">170</a>             log(ident.getLineNo(), ident.getColumnNo(),
+<a class="jxr_linenumber" name="171" href="#171">171</a>                 <span class="jxr_string">"illegal.type"</span>, ident.getText());
+<a class="jxr_linenumber" name="172" href="#172">172</a>         }
+<a class="jxr_linenumber" name="173" href="#173">173</a>     }
+<a class="jxr_linenumber" name="174" href="#174">174</a> 
+<a class="jxr_linenumber" name="175" href="#175">175</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="176" href="#176">176</a> <em class="jxr_javadoccomment">     * @param aClassName class name to check.</em>
+<a class="jxr_linenumber" name="177" href="#177">177</a> <em class="jxr_javadoccomment">     * @return true if given class name is one of illegal classes</em>
+<a class="jxr_linenumber" name="178" href="#178">178</a> <em class="jxr_javadoccomment">     *         or if it matches to abstract class names pattern.</em>
+<a class="jxr_linenumber" name="179" href="#179">179</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="180" href="#180">180</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> isMatchingClassName(String aClassName)
+<a class="jxr_linenumber" name="181" href="#181">181</a>     {
+<a class="jxr_linenumber" name="182" href="#182">182</a>         <strong class="jxr_keyword">return</strong> mIllegalClassNames.contains(aClassName)
+<a class="jxr_linenumber" name="183" href="#183">183</a>             || (!mLegalAbstractClassNames.contains(aClassName)
+<a class="jxr_linenumber" name="184" href="#184">184</a>                 &amp;&amp; getRegexp().matcher(aClassName).find());
+<a class="jxr_linenumber" name="185" href="#185">185</a>     }
+<a class="jxr_linenumber" name="186" href="#186">186</a> 
+<a class="jxr_linenumber" name="187" href="#187">187</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="188" href="#188">188</a> <em class="jxr_javadoccomment">     * @param aAST method def to check.</em>
+<a class="jxr_linenumber" name="189" href="#189">189</a> <em class="jxr_javadoccomment">     * @return true if we should check this method.</em>
+<a class="jxr_linenumber" name="190" href="#190">190</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="191" href="#191">191</a>     <strong class="jxr_keyword">private</strong> <strong class="jxr_keyword">boolean</strong> isCheckedMethod(<a href="../../../../../../com/puppycrawl/tools/checkstyle/api/DetailAST.html">DetailAST</a> aAST)
+<a class="jxr_linenumber" name="192" href="#192">192</a>     {
+<a class="jxr_linenumber" name="193" href="#193">193</a>         <strong class="jxr_keyword">final</strong> String methodName =
+<a class="jxr_linenumber" name="194" href="#194">194</a>             aAST.findFirstToken(TokenTypes.IDENT).getText();
+<a class="jxr_linenumber" name="195" href="#195">195</a>         <strong class="jxr_keyword">return</strong> !mIgnoredMethodNames.contains(methodName);
+<a class="jxr_linenumber" name="196" href="#196">196</a>     }
+<a class="jxr_linenumber" name="197" href="#197">197</a> 
+<a class="jxr_linenumber" name="198" href="#198">198</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="199" href="#199">199</a> <em class="jxr_javadoccomment">     * Set the list of illegal variable types.</em>
+<a class="jxr_linenumber" name="200" href="#200">200</a> <em class="jxr_javadoccomment">     * @param aClassNames array of illegal variable types</em>
+<a class="jxr_linenumber" name="201" href="#201">201</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="202" href="#202">202</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> setIllegalClassNames(String[] aClassNames)
+<a class="jxr_linenumber" name="203" href="#203">203</a>     {
+<a class="jxr_linenumber" name="204" href="#204">204</a>         mIllegalClassNames.clear();
+<a class="jxr_linenumber" name="205" href="#205">205</a>         <strong class="jxr_keyword">for</strong> (String name : aClassNames) {
+<a class="jxr_linenumber" name="206" href="#206">206</a>             mIllegalClassNames.add(name);
+<a class="jxr_linenumber" name="207" href="#207">207</a>             <strong class="jxr_keyword">final</strong> <strong class="jxr_keyword">int</strong> lastDot = name.lastIndexOf(<span class="jxr_string">"."</span>);
+<a class="jxr_linenumber" name="208" href="#208">208</a>             <strong class="jxr_keyword">if</strong> ((lastDot &gt; 0) &amp;&amp; (lastDot &lt; (name.length() - 1))) {
+<a class="jxr_linenumber" name="209" href="#209">209</a>                 <strong class="jxr_keyword">final</strong> String shortName =
+<a class="jxr_linenumber" name="210" href="#210">210</a>                     name.substring(name.lastIndexOf(<span class="jxr_string">"."</span>) + 1);
+<a class="jxr_linenumber" name="211" href="#211">211</a>                 mIllegalClassNames.add(shortName);
+<a class="jxr_linenumber" name="212" href="#212">212</a>             }
+<a class="jxr_linenumber" name="213" href="#213">213</a>         }
+<a class="jxr_linenumber" name="214" href="#214">214</a>     }
+<a class="jxr_linenumber" name="215" href="#215">215</a> 
+<a class="jxr_linenumber" name="216" href="#216">216</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="217" href="#217">217</a> <em class="jxr_javadoccomment">     * Get the list of illegal variable types.</em>
+<a class="jxr_linenumber" name="218" href="#218">218</a> <em class="jxr_javadoccomment">     * @return array of illegal variable types</em>
+<a class="jxr_linenumber" name="219" href="#219">219</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="220" href="#220">220</a>     <strong class="jxr_keyword">public</strong> String[] getIllegalClassNames()
+<a class="jxr_linenumber" name="221" href="#221">221</a>     {
+<a class="jxr_linenumber" name="222" href="#222">222</a>         <strong class="jxr_keyword">return</strong> mIllegalClassNames.toArray(
+<a class="jxr_linenumber" name="223" href="#223">223</a>             <strong class="jxr_keyword">new</strong> String[mIllegalClassNames.size()]);
+<a class="jxr_linenumber" name="224" href="#224">224</a>     }
+<a class="jxr_linenumber" name="225" href="#225">225</a> 
+<a class="jxr_linenumber" name="226" href="#226">226</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="227" href="#227">227</a> <em class="jxr_javadoccomment">     * Set the list of ignore method names.</em>
+<a class="jxr_linenumber" name="228" href="#228">228</a> <em class="jxr_javadoccomment">     * @param aMethodNames array of ignored method names</em>
+<a class="jxr_linenumber" name="229" href="#229">229</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="230" href="#230">230</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> setIgnoredMethodNames(String[] aMethodNames)
+<a class="jxr_linenumber" name="231" href="#231">231</a>     {
+<a class="jxr_linenumber" name="232" href="#232">232</a>         mIgnoredMethodNames.clear();
+<a class="jxr_linenumber" name="233" href="#233">233</a>         <strong class="jxr_keyword">for</strong> (String element : aMethodNames) {
+<a class="jxr_linenumber" name="234" href="#234">234</a>             mIgnoredMethodNames.add(element);
+<a class="jxr_linenumber" name="235" href="#235">235</a>         }
+<a class="jxr_linenumber" name="236" href="#236">236</a>     }
+<a class="jxr_linenumber" name="237" href="#237">237</a> 
+<a class="jxr_linenumber" name="238" href="#238">238</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="239" href="#239">239</a> <em class="jxr_javadoccomment">     * Get the list of ignored method names.</em>
+<a class="jxr_linenumber" name="240" href="#240">240</a> <em class="jxr_javadoccomment">     * @return array of ignored method names</em>
+<a class="jxr_linenumber" name="241" href="#241">241</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="242" href="#242">242</a>     <strong class="jxr_keyword">public</strong> String[] getIgnoredMethodNames()
+<a class="jxr_linenumber" name="243" href="#243">243</a>     {
+<a class="jxr_linenumber" name="244" href="#244">244</a>         <strong class="jxr_keyword">return</strong> mIgnoredMethodNames.toArray(
+<a class="jxr_linenumber" name="245" href="#245">245</a>             <strong class="jxr_keyword">new</strong> String[mIgnoredMethodNames.size()]);
+<a class="jxr_linenumber" name="246" href="#246">246</a>     }
+<a class="jxr_linenumber" name="247" href="#247">247</a> 
+<a class="jxr_linenumber" name="248" href="#248">248</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="249" href="#249">249</a> <em class="jxr_javadoccomment">     * Set the list of legal abstract class names.</em>
+<a class="jxr_linenumber" name="250" href="#250">250</a> <em class="jxr_javadoccomment">     * @param aClassNames array of legal abstract class names</em>
+<a class="jxr_linenumber" name="251" href="#251">251</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="252" href="#252">252</a>     <strong class="jxr_keyword">public</strong> <strong class="jxr_keyword">void</strong> setLegalAbstractClassNames(String[] aClassNames)
+<a class="jxr_linenumber" name="253" href="#253">253</a>     {
+<a class="jxr_linenumber" name="254" href="#254">254</a>         mLegalAbstractClassNames.clear();
+<a class="jxr_linenumber" name="255" href="#255">255</a>         <strong class="jxr_keyword">for</strong> (String element : aClassNames) {
+<a class="jxr_linenumber" name="256" href="#256">256</a>             mLegalAbstractClassNames.add(element);
+<a class="jxr_linenumber" name="257" href="#257">257</a>         }
+<a class="jxr_linenumber" name="258" href="#258">258</a>     }
+<a class="jxr_linenumber" name="259" href="#259">259</a> 
+<a class="jxr_linenumber" name="260" href="#260">260</a>     <em class="jxr_javadoccomment">/**</em>
+<a class="jxr_linenumber" name="261" href="#261">261</a> <em class="jxr_javadoccomment">     * Get the list of legal abstract class names.</em>
+<a class="jxr_linenumber" name="262" href="#262">262</a> <em class="jxr_javadoccomment">     * @return array of legal abstract class names</em>
+<a class="jxr_linenumber" name="263" href="#263">263</a> <em class="jxr_javadoccomment">     */</em>
+<a class="jxr_linenumber" name="264" href="#264">264</a>     <strong class="jxr_keyword">public</strong> String[] getLegalAbstractClassNames()
+<a class="jxr_linenumber" name="265" href="#265">265</a>     {
+<a class="jxr_linenumber" name="266" href="#266">266</a>         <strong class="jxr_keyword">return</strong> mLegalAbstractClassNames.toArray(
+<a class="jxr_linenumber" name="267" href="#267">267</a>             <strong class="jxr_keyword">new</strong> String[mLegalAbstractClassNames.size()]);
+<a class="jxr_linenumber" name="268" href="#268">268</a>     }
+<a class="jxr_linenumber" name="269" href="#269">269</a> }
+</pre>
+<hr/><div id="footer">This page was automatically generated by <a href="http://maven.apache.org/">Maven</a></div></body>
+</html>
+
