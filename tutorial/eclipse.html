@@ -3,7 +3,7 @@
 <html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en" lang="en">
   <head>
     <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
-    <title>checkstyle &#x2013; Contributing</title>
+    <title>checkstyle &#x2013; Importing and debugging in Eclipse IDE</title>
     <style type="text/css" media="all">
       @import url("./css/maven-base.css");
       @import url("./css/maven-theme.css");
@@ -157,14 +157,14 @@
               </ul>
         </li>
                   <li class="none">
-            <strong>Contributing</strong>
-          </li>
-                                                                                                  <li class="expanded">
+                          <a href="contributing.html" title="Contributing">Contributing</a>
+            </li>
+                                                                                                            <li class="expanded">
                           <a href="beginning_development.html" title="Beginning Development">Beginning Development</a>
                     <ul>
                       <li class="none">
-                          <a href="eclipse.html" title="Eclipse IDE">Eclipse IDE</a>
-            </li>
+            <strong>Eclipse IDE</strong>
+          </li>
                       <li class="none">
                           <a href="netbeans.html" title="Netbeans IDE">Netbeans IDE</a>
             </li>
@@ -213,154 +213,33 @@
         
 
   
-
     <div class="section">
-<h2><a name="Introduction"></a>Introduction</h2>
-
+<h2><a name="Import_Checkstyle_Project"></a>Import Checkstyle Project</h2>
       
 <p>
-        Hey, good to see you on this page. It means that you are
-        considering a contribution of your own work to the Checkstyle
-        project. We welcome anything: bugfixes, new check modules, unit
-        tests, documentation improvements, build process simplification,
-        etc.
-      </p>
-
-      
-<p>
-        This document assumes you are working with the GIT version of
-        checkstyle and that you are familiar with some standard
-        development tools (
-
-        <a class="externalLink" href="http://git-scm.com/">GIT</a>,
-        <a class="externalLink" href="http://maven.apache.org">Maven</a>,
-        <a class="externalLink" href="http://junit.org">JUnit</a>).
-      </p>
-      
-<p>
-        To start the development - visit our
-        <a href="beginning_development">Beginning Development</a> page.
-      </p>
-      
-<p>
-        <b>ATTENTION:</b> if you have idea how to improve Checkstyle please create issue on
-        our <a class="externalLink" href="https://github.com/checkstyle/checkstyle/issues">tracking system</a>.
-        As soon as one of admins of our project approved your idea you are good to start
-        implementation and you will be welcome with final code contribution.
-        Please do not expect that we will accept any code that you send to us.
-        Example of ideal <a class="externalLink" href="https://github.com/checkstyle/checkstyle/issues/258">issue description</a>,
-        and how it is commented on fix <a class="externalLink" href="https://github.com/checkstyle/checkstyle/pull/601">Pull Request</a>.
-      </p>
-      
-<p>
-        <b>ATTENTION:</b> any new Check that you are going to introduce you need to contribute to our
-        sanbox project <a class="externalLink" href="https://github.com/sevntu-checkstyle/sevntu.checkstyle">sevntu.checkstyle</a>.
-        We are receiving only bug fixes for now to our main project, here is a
-        <a class="externalLink" href="https://groups.google.com/forum/#!topic/checkstyle-devel/JbhfiiSqKsQ">reason</a>.
+        Select File &gt; Import &gt; Maven &gt; Existing Maven Projects<br /><br />
+        <img src="images/gui_screenshot_importing_eclipse.png" alt="screenshot" />
       </p>
     </div>
 
     
 <div class="section">
-<h2><a name="Quality_matters"></a>Quality matters</h2>
-
+<h2><a name="Debug"></a>Debug</h2>
       
 <p>
-        The developer team of checkstyle is really a lazy bunch of
-        people.  We try to avoid work as best as we can, but most of all
-        we try to avoid working on bugs that are reported by end users.
-      </p>
-
-      
-<p>
-        To that end, we use a set of development tools that ensure that
-        the quality of our code is kept at a fairly high level. Like
-        most projects today, we use JUnit to test our code. However we
-        do take this one step further and measure the coverage of our
-        unit tests using
-
-        <a class="externalLink" href="http://cobertura.sourceforge.net/">Cobertura</a>.
-
-        This means it is not sufficient to pass all tests, but the tests
-        should ideally execute each line in the code. To generate the
-        Cobertura report, run the Maven command
-
-        <tt>mvn cobertura:cobertura</tt>.
-
-        Check results on report target/site/cobertura/index.html in project home folder.
-      </p>
-
-      
-<p>
-        Besides using unit testing, we obviously also use checkstyle to
-        check it's own code.
-      </p>
-
-      
-<p>
-        The Maven command <tt>mvn clean verify</tt> must pass
-        without any errors.
-      </p>
-
-      
-<p>
-        If you add new end user features (Check, Filter, ....), remember to document
-        them in JavaDoc of java classes and xdoc files that used to generate that site.
-        Please recheck site and all bundles generation by <tt>mvn clean site</tt>
-      </p>
-
-      
-<p>
-        The last step of verification that all works fine please do testing of your
-        functionality on any open-source project (Spring, Hibernate, ....).
-        Here is how to do it from <a class="externalLink" href="http://checkstyle.sourceforge.net/cmdline.html">command line</a>
-      </p>
-    </div>
-
-    
-<div class="section">
-<h2><a name="Submitting_your_contribution"></a>Submitting your contribution</h2>
-
-      
-<p>
-        Once you have made sure that your changes pass the Maven command
-        <tt>mvn clean verify</tt>, the code coverage is of high
-        standard and everything is documented, then you are ready to
-        submit your work.
-      </p>
-
-      
-<p>
-        Please use <a class="externalLink" href="http://help.github.com/articles/using-pull-requests">Pull Request</a>
-        feature of <a class="externalLink" href="http://github.com/">Github</a>.<br />
-        Please provide wide description of update with detailed explanation of problem
-        and how you propose to resolve it.
-        <b>ATTENTION:</b> Please recheck that in your Pull Request there is ONLY your changes and all of them are rebased from most recent HEAD of our master branch.
-      </p>
-
-      
-<p>
-        <b>ATTENTION:</b> Please provide single-line meaningful message for commit with reference to github issue or Pull Request for more details.<br />
-        Ideal format for message is &quot;Brief message ..... , issue(or pull request) #NUMBER&quot;.
-        <a class="externalLink" href="https://github.com/checkstyle/checkstyle/commit/9303fd9d971eb55cdfd62686ba2f5698edb2c83e">Good example</a>
-      </p>
-
-      
-<p>
-        After you do Pull Request please recheck that our where is no problem from our build system:
-        <a class="externalLink" href="https://travis-ci.org/checkstyle/checkstyle">Travis</a> and
-        <a class="externalLink" href="https://coveralls.io/r/checkstyle/checkstyle">Coveralls</a>.
-        You will see that your Pull Request on Github is marked by that jobs automatically in few minutes.
-      </p>
-
-      
-<p>
-        We are not only lazy but at times we are also busy with our day
-        jobs.  This means that you might not always get an immediate
-        answer. You are not being ignored, and we value your work - we
-        might just be too busy to review your code, especially if it is
-        a bit complex. If you don't get a response within two weeks,
-        feel free to send a reminder email about your tracker item.
+        Open the Check's source file by double click on it in a source tree as is shown:<br /><br />
+        <img src="images/gui_screenshot_select_check_eclipse.png" alt="screenshot" />
+        <br /><br />
+        Debug the Check by putting the breakpoint at controversial place (double-click)
+        on the left part of line number as it is shown:<br /><br />
+        <img src="images/gui_screenshot_debug_eclipse.png" alt="screenshot" />
+        <br /><br />
+        Then right-click the corresponding Unit-test file or class definition &gt; Debug As &gt;
+        JUnit Test<br /><br />
+        <img src="images/gui_screenshot_ut_select_eclipse.png" alt="screenshot" />
+        <br /><br />
+        Then manage you debug operations by F6 (Step Over), F5 (Step Into), F7 (Step Return)
+        and F8 (Resume)
       </p>
     </div>
   
