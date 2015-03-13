@@ -1,0 +1,15 @@
+$(function() {
+            var url    = window.location.href;
+            $('.section h2').hover(
+                    function(evt) {
+                    	$('<a href="' + url + '"></a>').insertAfter($(evt.currentTarget).find('a:first'));
+                        var dlName = $(evt.currentTarget).find('a:first').attr('name');
+                        if (dlName) {
+                            var dlLink = url + '#' + dlName;
+                            $('<a class="dl-link" href="' + dlLink + '"><img src="images/anchor.png"></a>').insertAfter($(evt.currentTarget).find('a:first'));
+                        }
+                    },
+                    function(evt) {
+                        $(evt.currentTarget).find('a.dl-link').remove();
+                    });
+        });

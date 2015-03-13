@@ -23,3 +23,20 @@ div.tip {
   color:Black;
   border: ridge;
 }
+
+.section {
+
+}
+
+a.dl-link {
+  position: relative;
+  float: right;
+}
+
+h2:hover .anchor {
+  display: inline-block;
+}
+
+.anchor {
+  display: none;
+}
