@@ -24,15 +24,6 @@ div.tip {
   border: ridge;
 }
 
-.section {
-
-}
-
-a.dl-link {
-  position: relative;
-  float: right;
-}
-
 h2:hover .anchor {
   display: inline-block;
 }

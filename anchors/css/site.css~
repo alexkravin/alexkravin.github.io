@@ -33,3 +33,10 @@ a.dl-link {
   float: right;
 }
 
+h2:hover .anchor {
+  display: inline-block;
+}
+
+.anchor {
+  display: none;
+}
